@@ -1,13 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import axios from "axios";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
+
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 const COLORS = ["#9c6b3c", "#d1a978", "#e5d3b3", "#b8a999", "#222"];
 
@@ -54,9 +50,7 @@ export default function Dashboard() {
     },
     {
       name: "Desvio Informal",
-      value:
-        data.desvios_informais.reuniao +
-        data.desvios_informais.auxilio,
+      value: data.desvios_informais.reuniao + data.desvios_informais.auxilio,
     },
   ];
 
@@ -73,11 +67,11 @@ export default function Dashboard() {
   ];
 
   const percentualCards = Math.round(
-    (data.cards.entregues / data.cards.planejados) * 100
+    (data.cards.entregues / data.cards.planejados) * 100,
   );
 
   const percentualHoras = Math.round(
-    (data.horas.apontadas / data.horas.planejadas) * 100
+    (data.horas.apontadas / data.horas.planejadas) * 100,
   );
 
   // =========================
@@ -88,25 +82,108 @@ export default function Dashboard() {
     <div
       style={{
         background: "#000",
-        borderRadius: 20,
-        padding: 20,
+        borderRadius: 30,
+        padding: 30,
         flex: 1,
-        minHeight: 235,
+        minHeight: 260, // 🔥 altura igual ao modelo
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
       }}
     >
       {children}
     </div>
   );
 
-  const Gauge = ({ value, label, extra }) => (
-    <div style={{ textAlign: "center" }}>
-      <h3>{label}</h3>
-      <div style={{ fontSize: 48 }}>{value}%</div>
-      <div style={{ display: "flex", justifyContent: "space-around" }}>
-        {extra}
+  const Gauge = ({ value, label, extra }) => {
+    const valorTratado = Math.min(value, 100); // evita passar de 100 no gráfico
+
+    const data = [
+      {
+        name: "bg",
+        value: 100,
+        fill: "#d9d9d9", // fundo cinza
+      },
+      {
+        name: "value",
+        value: valorTratado,
+        fill: "#9c6b3c", // cor principal
+      },
+    ];
+
+    return (
+      <div style={{ textAlign: "center", color: "#fff" }}>
+        <h3 style={{ marginBottom: 10 }}>{label}</h3>
+
+        <div style={{ position: "relative" }}>
+          <RadialBarChart
+            width={300}
+            height={180}
+            cx="50%"
+            cy="100%"
+            innerRadius="70%"
+            outerRadius="100%"
+            barSize={15}
+            data={data}
+            startAngle={180}
+            endAngle={0}
+          >
+            <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+            <RadialBar dataKey="value" cornerRadius={10} />
+          </RadialBarChart>
+
+          {/* VALOR CENTRAL */}
+          <div
+            style={{
+              position: "absolute",
+              top: "55%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              fontSize: 28,
+              fontWeight: "bold",
+            }}
+          >
+            {value.toFixed(2)}%
+          </div>
+
+          {/* 0% e 100% */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 20,
+              fontSize: 12,
+            }}
+          >
+            0,00%
+          </div>
+
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              right: 20,
+              fontSize: 12,
+            }}
+          >
+            100,00%
+          </div>
+        </div>
+
+        {/* INFOS ABAIXO */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-around",
+            marginTop: 10,
+            fontSize: 14,
+          }}
+        >
+          {extra}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const PieBlock = ({ title, data }) => (
     <Card>
@@ -129,57 +206,56 @@ export default function Dashboard() {
   // =========================
 
   return (
-  <div
-    style={{
-      background: "#87705F",
-      minHeight: "100vh",
-      width: "100%", // ✅ corrigido
-      margin: 0,
-      padding: 0,
-    }}
-  >
-    <Header filtros={filtros} setFiltros={setFiltros} />
+    <div
+      style={{
+        background: "#87705F",
+        minHeight: "100vh",
+        width: "100%", // ✅ corrigido
+        margin: 0,
+        padding: 0,
+      }}
+    >
+      <Header filtros={filtros} setFiltros={setFiltros} />
 
-    <div style={{ padding: "20px 40px" }}> {/* ✅ alinhamento lateral */}
-      
-      {/* TOP */}
-      <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
-        <Card>
-          <Gauge
-            value={percentualCards}
-            label="Resumo das entregas"
-            extra={
-              <>
-                <div>Planejados: {data.cards.planejados}</div>
-                <div>Entregues: {data.cards.entregues}</div>
-                <div>Não: {data.cards.nao_entregues}</div>
-              </>
-            }
-          />
-        </Card>
+      <div style={{ padding: "20px 40px" }}>
+        {" "}
+        {/* ✅ alinhamento lateral */}
+        {/* TOP */}
+        <div style={{ display: "flex", gap: 20, marginBottom: 20 }}>
+          <Card>
+            <Gauge
+              value={percentualCards}
+              label="Resumo das entregas"
+              extra={
+                <>
+                  <div>Planejados: {data.cards.planejados}</div>
+                  <div>Entregues: {data.cards.entregues}</div>
+                  <div>Não: {data.cards.nao_entregues}</div>
+                </>
+              }
+            />
+          </Card>
 
-        <Card>
-          <Gauge
-            value={percentualHoras}
-            label="Horas planejadas"
-            extra={
-              <>
-                <div>Planejadas: {data.horas.planejadas}</div>
-                <div>Pendentes: {data.horas.pendentes}</div>
-              </>
-            }
-          />
-        </Card>
+          <Card>
+            <Gauge
+              value={percentualHoras}
+              label="Horas planejadas"
+              extra={
+                <>
+                  <div>Planejadas: {data.horas.planejadas}</div>
+                  <div>Pendentes: {data.horas.pendentes}</div>
+                </>
+              }
+            />
+          </Card>
+        </div>
+        {/* BOTTOM */}
+        <div style={{ display: "flex", gap: 20 }}>
+          <PieBlock title="Horas totais" data={horasTotais} />
+          <PieBlock title="Desvios Formais" data={desviosFormais} />
+          <PieBlock title="Desvios Informais" data={desviosInformais} />
+        </div>
       </div>
-
-      {/* BOTTOM */}
-      <div style={{ display: "flex", gap: 20 }}>
-        <PieBlock title="Horas totais" data={horasTotais} />
-        <PieBlock title="Desvios Formais" data={desviosFormais} />
-        <PieBlock title="Desvios Informais" data={desviosInformais} />
-      </div>
-
     </div>
-  </div>
-);
+  );
 }
