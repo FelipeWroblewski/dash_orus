@@ -1,39 +1,37 @@
 from back.repositories.dashboard_repository import load_data
 
 def get_dashboard_metrics(team=None, sprint=None, dev=None):
+    print("service carregando")
     data = load_data()
 
-    tickets_melhorias = data[tickets_melhorias]
-    tickets_atendimento = data[tickets_atendimento]
-    desvios_informais = data[desvios_informais]
-    desvios_formais = data[desvios_formais]
+    tickets_melhorias = data["tickets_melhorias"]
+    tickets_atendimento = data["tickets_atendimento"]
+    desvios_informais = data["desvios_informais"]
+    desvios_formais = data["desvios_formais"]
 
-    #Resumo das entregas da Sprint
+    # Resumo das entregas da Sprint
     cards_planejados = tickets_melhorias['PLANEJADO'].sum()
     cards_entregues = tickets_melhorias['TOTAL_CONCLUIDAS'].sum()
     cards_nao_entregues = max(cards_planejados - cards_entregues, 0)
 
-    #Horas planejadas para as melhorias
-    horas_planejadas = tickets_melhorias['HORAS PLANEJADAS'].sum()
-    horas_apontadas = tickets_melhorias['HORAS APONTADAS'].sum()
+    # Horas planejadas para as melhorias (espaço vira _ após normalize_columns)
+    horas_planejadas = tickets_melhorias['HORAS_PLANEJADAS'].sum()
+    horas_apontadas = tickets_melhorias['HORAS_APONTADAS'].sum()
     horas_pendentes = max(horas_planejadas - horas_apontadas, 0)
-    gauge_max = 1
-    gauge_min = 0
-    gauge_target = 100
 
-    #Desvios Formais
+    # Desvios Formais
     atendimento = tickets_atendimento['HORAS_APONTADAS'].sum()
     agrupado_formais = (
         desvios_formais
         .assign(tipo_desvio=desvios_formais['TIPO_DESVIO'].str.strip().str.upper())
-        .groupby('tipo_desvio')['HORAS APONTADAS']
+        .groupby('tipo_desvio')['HORAS_APONTADAS']  # corrigido: era 'HORAS APONTADAS'
         .sum()
     )
     melhoria = agrupado_formais.get('MELHORIA', 0)
     revisao_ajuste = agrupado_formais.get('REVISAO AJUSTE', 0)
     revisao_erro = agrupado_formais.get('REVISAO ERRO', 0)
 
-    #Desvios Informais
+    # Desvios Informais
     agrupado_informais = (
         desvios_informais
         .groupby('TICKET_NUMBER')['HORAS_APONTADAS']
@@ -49,9 +47,10 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
     }
 
     valores = {
-        nome: round(agrupado_informais.get(codigo, 0), 2)
+        nome: round(float(agrupado_informais[codigo]) if codigo in agrupado_informais.index else 0, 2)
         for codigo, nome in mapa_tickets.items()
-    }
+    }   
+
 
     reuniao = valores['reuniao']
     auxilio = valores['auxilio']
@@ -60,11 +59,9 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
     code_review = valores['code_review']
     analise_tecnica = valores['analise_tecnica']
 
-
-    #Horas totais
+    # Horas totais
     desvios_informais_soma = reuniao + auxilio + atendimento_emergencial + impedimento + code_review + analise_tecnica
     desvios_formais_soma = melhoria + revisao_ajuste + revisao_erro + atendimento
-    #melhorias_sprint = 
 
     resultado = {
         "cards": {
@@ -84,7 +81,7 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
             "atendimento": float(atendimento)
         },
         "desvios_informais": {
-             "reuniao": float(reuniao),
+            "reuniao": float(reuniao),
             "auxilio": float(auxilio),
             "atendimento_emergencial": float(atendimento_emergencial),
             "impedimento": float(impedimento),
@@ -92,3 +89,5 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
             "analise_tecnica": float(analise_tecnica)
         }
     }
+
+    return resultado

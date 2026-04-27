@@ -4,6 +4,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def normalize_columns(df):
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.upper()
+        .str.replace(" ", "_")
+    )
+    return df
+
 def load_data():
     conn = connect_dw()
 
@@ -31,6 +40,11 @@ def load_data():
                 SELECT * FROM ti.forus_desvios_formais
             """, conn
         )
+
+        tickets_melhoria = normalize_columns(tickets_melhoria)
+        tickets_atendimento = normalize_columns(tickets_atendimento)
+        desvios_formais = normalize_columns(desvios_formais)
+        desvios_informais = normalize_columns(desvios_informais)
 
         return {
             "tickets_melhorias": tickets_melhoria,
