@@ -15,9 +15,9 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
     cards_nao_entregues = max(cards_planejados - cards_entregues, 0)
 
     # Horas planejadas para as melhorias (espaço vira _ após normalize_columns)
-    horas_planejadas = tickets_melhorias['HORAS_PLANEJADAS'].sum()
-    horas_apontadas = tickets_melhorias['HORAS_APONTADAS'].sum()
-    horas_pendentes = max(horas_planejadas - horas_apontadas, 0)
+    horas_planejadas = round(tickets_melhorias['HORAS_PLANEJADAS'].sum(), 2)
+    horas_apontadas = round(tickets_melhorias['HORAS_APONTADAS'].sum(), 2)
+    horas_pendentes = round(max(horas_planejadas - horas_apontadas, 0), 2)
 
     # Desvios Formais
     atendimento = tickets_atendimento['HORAS_APONTADAS'].sum()
