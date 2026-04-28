@@ -9,6 +9,25 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
     desvios_informais = data["desvios_informais"]
     desvios_formais = data["desvios_formais"]
 
+    #Filtros (front-end)
+    if team and team != "Todos":
+        tickets_melhorias = tickets_melhorias[tickets_melhorias['TEAM'] == team]
+        tickets_atendimento = tickets_atendimento[tickets_atendimento['TEAM'] == team]
+        desvios_formais = desvios_formais[desvios_formais['TEAM'] == team]
+        desvios_informais = desvios_informais[desvios_informais['TEAM'] == team]
+
+    if sprint and sprint != "Todos":
+        tickets_melhorias = tickets_melhorias[tickets_melhorias['SPRINT_NUMBER'] == int(sprint)]
+        tickets_atendimento = tickets_atendimento[tickets_atendimento['SPRINT_NUMBER'] == int(sprint)]
+        desvios_formais = desvios_formais[desvios_formais['SPRINT_NUMBER'] == int(sprint)]
+        desvios_informais = desvios_informais[desvios_informais['SPRINT_NUMBER'] == int(sprint)]
+
+    if dev and dev != "Todos":
+        tickets_melhorias = tickets_melhorias[tickets_melhorias['NOME_DEV'] == dev]
+        tickets_atendimento = tickets_atendimento[tickets_atendimento['NOME_DEV'] == dev]
+        desvios_formais = desvios_formais[desvios_formais['NOME_DEV'] == dev]
+        desvios_informais = desvios_informais[desvios_informais['NOME_DEV'] == dev]
+
     # Resumo das entregas da Sprint
     cards_planejados = tickets_melhorias['PLANEJADO'].sum()
     cards_entregues = tickets_melhorias['TOTAL_CONCLUIDAS'].sum()

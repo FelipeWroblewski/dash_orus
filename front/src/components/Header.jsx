@@ -1,7 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import logo from "../assets/logo.png";
 
 export default function Header({ filtros, setFiltros }) {
+  const [opcoesFiltros, setOpcoesFiltros] = useState({
+    teams: ["Todos"],
+    sprints: ["Todos"],
+    devs: ["Todos"],
+  });
+
+  useEffect(() => {
+    axios.get("http://localhost:9001/filtros")
+      .then((res) => {
+        setOpcoesFiltros({
+          teams: ["Todos", ...res.data.teams],
+          sprints: ["Todos", ...res.data.sprints],
+          devs: ["Todos", ...res.data.devs],
+        });
+      })
+      .catch((err) => console.error("Erro ao carregar filtros:", err));
+  }, []);
+
   const handleChange = (campo, valor) => {
     setFiltros((prev) => ({
       ...prev,
@@ -43,60 +62,32 @@ export default function Header({ filtros, setFiltros }) {
           justifyContent: "flex-end",
         }}
       >
-        {/* TEAM */}
         <Select
-          style={{
-            background: "#000",
-            color: "#fff",
-            border: "1px solid #000",
-            padding: "8px 12px",
-            borderRadius: 6,
-          }}
           label="Team"
           value={filtros.team}
           onChange={(v) => handleChange("team", v)}
-          options={["Todos", "Web", "Dados"]}
+          options={opcoesFiltros.teams}
         />
 
-        {/* SPRINT */}
         <Select
-          style={{
-            background: "#000",
-            color: "#fff",
-            border: "1px solid #000",
-            padding: "8px 12px",
-            borderRadius: 6,
-          }}
           label="Sprint"
           value={filtros.sprint}
           onChange={(v) => handleChange("sprint", v)}
-          options={["Todos", "1", "2", "3"]}
+          options={opcoesFiltros.sprints}
         />
 
-        {/* DEV */}
         <Select
-            style={{
-            background: "#000",
-            color: "#fff",
-            border: "1px solid #000",
-            padding: "8px 12px",
-            borderRadius: 6,
-          }}
           label="Desenvolvedor"
           value={filtros.dev}
           onChange={(v) => handleChange("dev", v)}
-          options={["Todos", "Felipe", "João", "Maria"]}
+          options={opcoesFiltros.devs}
         />
       </div>
     </div>
   );
 }
 
-// =======================
-// COMPONENTE SELECT
-// =======================
-
-function Select({ label, value, onChange, options, style }) {
+function Select({ label, value, onChange, options }) {
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <label style={{ color: "#fff", fontSize: 14 }}>{label}</label>
@@ -108,7 +99,8 @@ function Select({ label, value, onChange, options, style }) {
           borderRadius: 5,
           border: "none",
           width: 150,
-          ...style,
+          background: "#000",
+          color: "#fff",
         }}
       >
         {options.map((opt, i) => (

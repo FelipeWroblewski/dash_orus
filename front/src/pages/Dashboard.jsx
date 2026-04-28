@@ -66,14 +66,13 @@ export default function Dashboard() {
     { name: "Auxílio", value: data.desvios_informais.auxilio },
   ];
 
-  const percentualCards = Math.round(
-    (data.cards.entregues / data.cards.planejados) * 100,
-  );
+  const percentualCards = data.cards.planejados > 0
+    ? Math.min(Math.round((data.cards.entregues / data.cards.planejados) * 100), 100)
+    : 0;
 
-  const percentualHoras = Math.round(
-    (data.horas.apontadas / data.horas.planejadas) * 100,
-  );
-
+  const percentualHoras = data.horas.planejadas > 0
+    ? Math.min(Math.round((data.horas.apontadas / data.horas.planejadas) * 100), 100)
+    : 0;
   // =========================
   // COMPONENTES
   // =========================
