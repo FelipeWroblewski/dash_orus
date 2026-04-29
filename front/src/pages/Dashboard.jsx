@@ -88,7 +88,7 @@ export default function Dashboard() {
   const Card = ({ children }) => (
     <div
       style={{
-        background: "#000",
+        background: "#1c1917",
         borderRadius: 30,
         padding: 30,
         flex: 1,
@@ -158,7 +158,7 @@ const Gauge = ({ value, label, extra }) => {
 
 const COLORS_TOTALS = ["#87705F", "#86989c", "#555"];
 const FORMAL_COLORS = ["#87705F", "#86989c", "#555", "#fff"];
-const INFORMAL_COLORS = ["#87705F", "#86989c", "#fff", "#555", "#000"];
+const INFORMAL_COLORS = ["#87705F", "#86989c", "#fff", "#555", "#1c1917"];
 
 const renderLabel = ({ cx, cy, midAngle, outerRadius, name, value }) => {
   const RADIAN = Math.PI / 180;

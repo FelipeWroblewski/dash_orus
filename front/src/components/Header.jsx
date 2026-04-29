@@ -33,7 +33,7 @@ export default function Header({ filters, setFilters }) {
       {/* TOPO PRETO */}
       <div
         style={{
-          background: "#000",
+          background: "#1c1917",
           color: "#fff",
           padding: "20px 40px",
           display: "flex",
@@ -99,7 +99,7 @@ function Select({ label, value, onChange, options }) {
           borderRadius: 5,
           border: "none",
           width: 150,
-          background: "#000",
+          background: "#1c1917",
           color: "#fff",
         }}
       >
