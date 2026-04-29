@@ -10,10 +10,10 @@ const COLORS = ["#9c6b3c", "#d1a978", "#e5d3b3", "#b8a999", "#222"];
 export default function Dashboard() {
   const [data, setData] = useState(null);
 
-  const [filtros, setFiltros] = useState({
-    team: "Todos",
-    sprint: "Todos",
-    dev: "Todos",
+  const [filters, setFilters] = useState({
+    team: "All",
+    sprint: "All",
+    dev: "All",
   });
 
   // =========================
@@ -22,7 +22,7 @@ export default function Dashboard() {
   useEffect(() => {
     axios
       .get("http://localhost:9001/dashboard", {
-        params: filtros,
+        params: filters,
       })
       .then((res) => {
         setData(res.data);
@@ -30,7 +30,7 @@ export default function Dashboard() {
       .catch((err) => {
         console.error("Erro na API:", err);
       });
-  }, [filtros]);
+  }, [filters]);
 
   if (!data) return <div style={{ padding: 20 }}>Carregando...</div>;
 
@@ -38,40 +38,48 @@ export default function Dashboard() {
   // DADOS FORMATADOS
   // =========================
 
-  const horasTotais = [
-    { name: "Melhorias", value: data.horas.apontadas },
+  const totalHours = [
+    { name: "Melhorias", value: data.hours.recorded },
     {
       name: "Desvio Formal",
       value:
-        data.desvios_formais.melhoria +
-        data.desvios_formais.revisao_ajuste +
-        data.desvios_formais.revisao_erro +
-        data.desvios_formais.atendimento,
+        data.formal_deviations.improvement +
+        data.formal_deviations.revision_adjustment +
+        data.formal_deviations.error_revision  +
+        data.formal_deviations.service,
     },
     {
       name: "Desvio Informal",
-      value: data.desvios_informais.reuniao + data.desvios_informais.auxilio,
+      value: 
+        data.informal_deviations.meeting + 
+        data.informal_deviations.assistant + 
+        data.informal_deviations.emergency_service +
+        data.informal_deviations.impediment +
+        data.informal_deviations.code_review,
     },
   ];
 
-  const desviosFormais = [
-    { name: "Melhoria", value: data.desvios_formais.melhoria },
-    { name: "Revisão Ajuste", value: data.desvios_formais.revisao_ajuste },
-    { name: "Revisão Erro", value: data.desvios_formais.revisao_erro },
-    { name: "Atendimento", value: data.desvios_formais.atendimento },
+  const formalDeviations = [
+    { name: "Melhoria", value: data.formal_deviations.improvement  },
+    { name: "Revisão Ajuste", value: data.formal_deviations.revision_adjustment  },
+    { name: "Revisão Erro", value: data.formal_deviations.error_revision  },
+    { name: "Atendimento", value: data.formal_deviations.service },
   ];
 
-  const desviosInformais = [
-    { name: "Reunião", value: data.desvios_informais.reuniao },
-    { name: "Auxílio", value: data.desvios_informais.auxilio },
-  ];
+    const informalDeviations = [
+        { name: "Reunião", value: data.informal_deviations.meeting },
+        { name: "Auxílio", value: data.informal_deviations.assistant },
+        { name: "Atendimento Emergencial", value: data.informal_deviations.emergency_service },
+        { name: "Impedimento", value: data.informal_deviations.impediment },
+        { name: "Code Review", value: data.informal_deviations.code_review },
+    ];
 
-  const percentualCards = data.cards.planejados > 0
-    ? Math.min(Math.round((data.cards.entregues / data.cards.planejados) * 100), 100)
+  const cardPercentage = data.cards.planned_cards > 0
+    ? Math.min(Math.round((data.cards.delivered / data.cards.planned_cards) * 100), 100)
     : 0;
 
-  const percentualHoras = data.horas.planejadas > 0
-    ? Math.min(Math.round((data.horas.apontadas / data.horas.planejadas) * 100), 100)
+  const hoursPercentage = data.hours.planned_hours  > 0
+    ? Math.min(Math.round((data.hours.recorded / data.hours.planned_hours) * 100), 100)
     : 0;
   // =========================
   // COMPONENTES
@@ -148,11 +156,11 @@ const Gauge = ({ value, label, extra }) => {
 
 
 
-const COLORS_TOTAIS = ["#9c6b3c", "#d1a978", "#e5d3b3"];
-const COLORS_FORMAIS = ["#5b3a29", "#9c6b3c", "#d1a978", "#e5d3b3"];
-const COLORS_INFORMAIS = ["#9c6b3c", "#d1a978"];
+const COLORS_TOTALS = ["#87705F", "#86989c", "#555"];
+const FORMAL_COLORS = ["#87705F", "#86989c", "#555", "#fff"];
+const INFORMAL_COLORS = ["#87705F", "#86989c", "#fff", "#555", "#000"];
 
-const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, name, percent }) => {
+const renderLabel = ({ cx, cy, midAngle, outerRadius, name, value }) => {
   const RADIAN = Math.PI / 180;
   const radius = outerRadius + 30;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -160,38 +168,42 @@ const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, name, percent
 
   return (
     <text x={x} y={y} fill="#fff" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central" fontSize={13}>
-      {`${name} (${(percent * 100).toFixed(1)}%)`}
+      {`${name} ${value.toFixed(2)}`}
     </text>
   );
 };
 
-const PieBlock = ({ title, data, colors }) => (
-  <Card>
-    <h3 style={{
-      textAlign: "center",
-      marginBottom: 10,
-      fontSize: 34,
-      fontWeight: 400,
-      color: "#fff",
-    }}>{title}</h3>
-    <ResponsiveContainer width="100%" height={250}>
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="value"
-          outerRadius={90}
-          labelLine={true}
-          label={renderLabel}
-        >
-          {data.map((_, i) => (
-            <Cell key={i} fill={colors[i % colors.length]} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => value.toFixed(2)} />
-      </PieChart>
-    </ResponsiveContainer>
-  </Card>
-);
+const PieBlock = ({ title, data, colors }) => {
+  const filteredData = data.filter(item => item.value > 0);
+
+  return (
+    <Card>
+      <h3 style={{
+        textAlign: "center",
+        marginBottom: 10,
+        fontSize: 34,
+        fontWeight: 400,
+        color: "#fff",
+      }}>{title}</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <PieChart>
+          <Pie
+            data={filteredData}
+            dataKey="value"
+            outerRadius={90}
+            labelLine={true}
+            label={renderLabel}
+          >
+            {filteredData.map((_, i) => (
+              <Cell key={i} fill={colors[i % colors.length]} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value) => value.toFixed(2)} />
+        </PieChart>
+      </ResponsiveContainer>
+    </Card>
+  );
+};
   // =========================
   // RENDER
   // =========================
@@ -201,21 +213,21 @@ const PieBlock = ({ title, data, colors }) => (
       style={{
         background: "#87705F",
         minHeight: "100vh",
-        width: "100%", // ✅ corrigido
+        width: "100%", 
         margin: 0,
         padding: 0,
       }}
     >
-      <Header filtros={filtros} setFiltros={setFiltros} />
+      <Header filters={filters} setFilters={setFilters} />
 
       <div style={{ padding: "20px 40px" }}>
         {" "}
-        {/* ✅ alinhamento lateral */}
-        {/* TOP */}
+        {}
+        {}
         <div style={{ display: "flex", gap: 20, marginBottom: 30 }}>
           <Card>
             <Gauge    
-              value={percentualCards}
+              value={cardPercentage}
               label="Resumo das entregas"
               extra={
                 <div
@@ -232,7 +244,7 @@ const PieBlock = ({ title, data, colors }) => (
                         Planejados
                     </div>
                     <div style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
-                        {data.cards.planejados}
+                        {data.cards.planned_cards}
                     </div>
                     </div>
 
@@ -241,7 +253,7 @@ const PieBlock = ({ title, data, colors }) => (
                         Entregues
                     </div>
                     <div style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
-                        {data.cards.entregues}
+                        {data.cards.delivered}
                     </div>
                     </div>
 
@@ -250,7 +262,7 @@ const PieBlock = ({ title, data, colors }) => (
                         Não entregues
                     </div>
                     <div style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
-                        {data.cards.nao_entregues}
+                        {data.cards.not_delivered}
                     </div>
                     </div>
                 </div>
@@ -260,7 +272,7 @@ const PieBlock = ({ title, data, colors }) => (
 
           <Card>
             <Gauge
-                value={percentualHoras}
+                value={hoursPercentage}
                 label="Horas planejadas"
                 extra={
                 <div
@@ -277,7 +289,7 @@ const PieBlock = ({ title, data, colors }) => (
                         Planejadas
                     </div>
                     <div style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
-                        {data.horas.planejadas}
+                        {data.hours.planned_hours}
                     </div>
                     </div>
 
@@ -286,7 +298,7 @@ const PieBlock = ({ title, data, colors }) => (
                         Pendentes
                     </div>
                     <div style={{ fontSize: 30, color: "#fff", fontWeight: "bold" }}>
-                        {data.horas.pendentes}
+                        {data.hours.outstanding}
                     </div>
                     </div>
                 </div>
@@ -296,9 +308,10 @@ const PieBlock = ({ title, data, colors }) => (
         </div>
         {/* BOTTOM */}
         <div style={{ display: "flex", gap: 20 }}>
-            <PieBlock title="Horas totais" data={horasTotais} colors={COLORS_TOTAIS} />
-            <PieBlock title="Desvios Formais" data={desviosFormais} colors={COLORS_FORMAIS} />
-            <PieBlock title="Desvios Informais" data={desviosInformais} colors={COLORS_INFORMAIS} />
+            <PieBlock title="Horas totais" data={totalHours} colors={COLORS_TOTALS} />
+            <PieBlock title="Desvios Formais" data={formalDeviations} colors={FORMAL_COLORS} />
+            <PieBlock title="Desvios Informais" data={informalDeviations} colors={INFORMAL_COLORS
+} />
         </div>
       </div>
     </div>

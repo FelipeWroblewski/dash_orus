@@ -17,40 +17,40 @@ def load_data():
     conn = connect_dw()
 
     try:
-        tickets_melhoria = pd.read_sql(
+        ticket_improvement = pd.read_sql(
             """
                 SELECT * FROM ti.forus_melhoria
             """, conn
         )
 
-        tickets_atendimento = pd.read_sql(
+        service_tickets = pd.read_sql(
             """
                 SELECT * FROM ti.forus_atendimento
             """, conn
         )
 
-        desvios_informais = pd.read_sql(
+        informal_deviations = pd.read_sql(
             """
                 SELECT * FROM ti.forus_desvios_informais
             """, conn
         )
 
-        desvios_formais = pd.read_sql(
+        formal_deviations = pd.read_sql(
             """
                 SELECT * FROM ti.forus_desvios_formais
             """, conn
         )
 
-        tickets_melhoria = normalize_columns(tickets_melhoria)
-        tickets_atendimento = normalize_columns(tickets_atendimento)
-        desvios_formais = normalize_columns(desvios_formais)
-        desvios_informais = normalize_columns(desvios_informais)
+        ticket_improvement = normalize_columns(ticket_improvement)
+        service_tickets = normalize_columns(service_tickets)
+        formal_deviations = normalize_columns(formal_deviations)
+        informal_deviations = normalize_columns(informal_deviations)
 
         return {
-            "tickets_melhorias": tickets_melhoria,
-            "tickets_atendimento": tickets_atendimento,
-            "desvios_formais": desvios_formais,
-            "desvios_informais": desvios_informais
+            "ticket_improvement": ticket_improvement,
+            "service_tickets": service_tickets,
+            "formal_deviations": formal_deviations,
+            "informal_deviations": informal_deviations
         }
     finally:
         conn.close()

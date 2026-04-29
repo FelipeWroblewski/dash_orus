@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 def connect_dw():
     from pathlib import Path
     env_path = Path(__file__).resolve().parent.parent / ".env"
-    print(f"Procurando .env em: {env_path}")
-    print(f"Arquivo existe? {env_path.exists()}")
     load_dotenv(dotenv_path=env_path)
 
     host = os.getenv("DW_HOST")

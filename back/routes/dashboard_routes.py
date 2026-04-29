@@ -5,12 +5,12 @@ import traceback
 
 router = APIRouter()
 
-@router.get("/filtros")
-def filtros():
+@router.get("/filters")
+def filters():
     try:
         data = load_data()
-        sprints = sorted(data["tickets_melhorias"]["SPRINT_NUMBER"].dropna().unique().tolist())
-        devs = sorted(data["tickets_melhorias"]["NOME_DEV"].dropna().unique().tolist())
+        sprints = sorted(data["ticket_improvement"]["SPRINT_NUMBER"].dropna().unique().tolist())
+        devs = sorted(data["ticket_improvement"]["NOME_DEV"].dropna().unique().tolist())
         return {
             "teams": ["WEB", "DADOS"],
             "sprints": sprints,

@@ -4,109 +4,107 @@ def get_dashboard_metrics(team=None, sprint=None, dev=None):
     print("service carregando")
     data = load_data()
 
-    tickets_melhorias = data["tickets_melhorias"]
-    tickets_atendimento = data["tickets_atendimento"]
-    desvios_informais = data["desvios_informais"]
-    desvios_formais = data["desvios_formais"]
+    ticket_improvement = data["ticket_improvement"]
+    service_tickets = data["service_tickets"]
+    informal_deviations = data["informal_deviations"]
+    formal_deviations = data["formal_deviations"]
 
     #Filtros (front-end)
-    if team and team != "Todos":
-        tickets_melhorias = tickets_melhorias[tickets_melhorias['TEAM'] == team]
-        tickets_atendimento = tickets_atendimento[tickets_atendimento['TEAM'] == team]
-        desvios_formais = desvios_formais[desvios_formais['TEAM'] == team]
-        desvios_informais = desvios_informais[desvios_informais['TEAM'] == team]
+    if team and team != ("All", "Todos"):
+        ticket_improvement = ticket_improvement[ticket_improvement['TEAM'] == team]
+        service_tickets = service_tickets[service_tickets['TEAM'] == team]
+        formal_deviations = formal_deviations[formal_deviations['TEAM'] == team]
+        informal_deviations = informal_deviations[informal_deviations['TEAM'] == team]
 
-    if sprint and sprint != "Todos":
-        tickets_melhorias = tickets_melhorias[tickets_melhorias['SPRINT_NUMBER'] == int(sprint)]
-        tickets_atendimento = tickets_atendimento[tickets_atendimento['SPRINT_NUMBER'] == int(sprint)]
-        desvios_formais = desvios_formais[desvios_formais['SPRINT_NUMBER'] == int(sprint)]
-        desvios_informais = desvios_informais[desvios_informais['SPRINT_NUMBER'] == int(sprint)]
+    if sprint and sprint != ("All", "Todos"):
+        ticket_improvement = ticket_improvement[ticket_improvement['SPRINT_NUMBER'] == int(sprint)]
+        service_tickets = service_tickets[service_tickets['SPRINT_NUMBER'] == int(sprint)]
+        formal_deviations = formal_deviations[formal_deviations['SPRINT_NUMBER'] == int(sprint)]
+        informal_deviations = informal_deviations[informal_deviations['SPRINT_NUMBER'] == int(sprint)]
 
-    if dev and dev != "Todos":
-        tickets_melhorias = tickets_melhorias[tickets_melhorias['NOME_DEV'] == dev]
-        tickets_atendimento = tickets_atendimento[tickets_atendimento['NOME_DEV'] == dev]
-        desvios_formais = desvios_formais[desvios_formais['NOME_DEV'] == dev]
-        desvios_informais = desvios_informais[desvios_informais['NOME_DEV'] == dev]
+    if dev and dev != ("All", "Todos"):
+        ticket_improvement = ticket_improvement[ticket_improvement['NOME_DEV'] == dev]
+        service_tickets = service_tickets[service_tickets['NOME_DEV'] == dev]
+        formal_deviations = formal_deviations[formal_deviations['NOME_DEV'] == dev]
+        informal_deviations = informal_deviations[informal_deviations['NOME_DEV'] == dev]
 
     # Resumo das entregas da Sprint
-    cards_planejados = tickets_melhorias['PLANEJADO'].sum()
-    cards_entregues = tickets_melhorias['TOTAL_CONCLUIDAS'].sum()
-    cards_nao_entregues = max(cards_planejados - cards_entregues, 0)
+    planned_cards = ticket_improvement['PLANEJADO'].sum()
+    cards_delivered = ticket_improvement['TOTAL_CONCLUIDAS'].sum()
+    cards_not_delivered = max(planned_cards - cards_delivered, 0)
 
     # Horas planejadas para as melhorias (espaço vira _ após normalize_columns)
-    horas_planejadas = round(tickets_melhorias['HORAS_PLANEJADAS'].sum(), 2)
-    horas_apontadas = round(tickets_melhorias['HORAS_APONTADAS'].sum(), 2)
-    horas_pendentes = round(max(horas_planejadas - horas_apontadas, 0), 2)
+    planned_hours = round(ticket_improvement['HORAS_PLANEJADAS'].sum(), 2)
+    hours_recorded = round(ticket_improvement['HORAS_APONTADAS'].sum(), 2)
+    outstanding_hours = round(max(planned_hours - hours_recorded, 0), 2)
 
     # Desvios Formais
-    atendimento = tickets_atendimento['HORAS_APONTADAS'].sum()
-    agrupado_formais = (
-        desvios_formais
-        .assign(tipo_desvio=desvios_formais['TIPO_DESVIO'].str.strip().str.upper())
-        .groupby('tipo_desvio')['HORAS_APONTADAS']  # corrigido: era 'HORAS APONTADAS'
+    service = service_tickets['HORAS_APONTADAS'].sum()
+    formal_groups = (
+        formal_deviations
+        .assign(deviation_type=formal_deviations['TIPO_DESVIO'].str.strip().str.upper())
+        .groupby('deviation_type')['HORAS_APONTADAS']  # corrigido: era 'HORAS APONTADAS'
         .sum()
     )
-    melhoria = agrupado_formais.get('MELHORIA', 0)
-    revisao_ajuste = agrupado_formais.get('REVISAO AJUSTE', 0)
-    revisao_erro = agrupado_formais.get('REVISAO ERRO', 0)
+    improvement = formal_groups.get('MELHORIA', 0)
+    revision_adjustment = formal_groups.get('REVISAO AJUSTE', 0)
+    error_revision = formal_groups.get('REVISAO ERRO', 0)
 
     # Desvios Informais
-    agrupado_informais = (
-        desvios_informais
+    informal_groups = (
+        informal_deviations
         .groupby('TICKET_NUMBER')['HORAS_APONTADAS']
         .sum()
     )
-    mapa_tickets = {
-        7: 'reuniao',
-        9: 'auxilio',
-        8: 'atendimento_emergencial',
-        736: 'impedimento',
+    map_tickets = {
+        7: 'meeting',
+        9: 'assistant',
+        8: 'emergency_service',
+        736: 'impediment',
         899: 'code_review',
-        1212: 'analise_tecnica'
+        1212: 'technical_analysis'
     }
 
-    valores = {
-        nome: round(float(agrupado_informais[codigo]) if codigo in agrupado_informais.index else 0, 2)
-        for codigo, nome in mapa_tickets.items()
+    values = {
+        nome: round(float(informal_groups[codigo]) if codigo in informal_groups.index else 0, 2)
+        for codigo, nome in map_tickets.items()
     }   
 
-
-    reuniao = valores['reuniao']
-    auxilio = valores['auxilio']
-    atendimento_emergencial = valores['atendimento_emergencial']
-    impedimento = valores['impedimento']
-    code_review = valores['code_review']
-    analise_tecnica = valores['analise_tecnica']
+    meeting = values['meeting']
+    assistant = values['assistant']
+    emergency_service = values['emergency_service']
+    impediment = values['impediment']
+    code_review = values['code_review']
+    technical_analysis = values['technical_analysis']
 
     # Horas totais
-    desvios_informais_soma = reuniao + auxilio + atendimento_emergencial + impedimento + code_review + analise_tecnica
-    desvios_formais_soma = melhoria + revisao_ajuste + revisao_erro + atendimento
+    informal_deviations_sum = meeting + assistant + emergency_service + impediment + code_review + technical_analysis
+    formal_deviations_sum = improvement + revision_adjustment + error_revision + service
 
-    resultado = {
+    result = {
         "cards": {
-            "planejados": int(cards_planejados),
-            "entregues": int(cards_entregues),
-            "nao_entregues": int(cards_nao_entregues)
+            "planned_cards": int(planned_cards),
+            "delivered": int(cards_delivered),
+            "not_delivered": int(cards_not_delivered)
         },
-        "horas": {
-            "planejadas": float(horas_planejadas),
-            "apontadas": float(horas_apontadas),
-            "pendentes": float(horas_pendentes)
+        "hours": {
+            "planned_hours": float(planned_hours),
+            "recorded": float(hours_recorded),
+            "outstanding": float(outstanding_hours)
         },
-        "desvios_formais": {
-            "melhoria": float(melhoria),
-            "revisao_ajuste": float(revisao_ajuste),
-            "revisao_erro": float(revisao_erro),
-            "atendimento": float(atendimento)
+        "formal_deviations": {
+            "improvement": float(improvement),
+            "revision_adjustment": float(revision_adjustment),
+            "error_revision": float(error_revision),
+            "service": float(service)
         },
-        "desvios_informais": {
-            "reuniao": float(reuniao),
-            "auxilio": float(auxilio),
-            "atendimento_emergencial": float(atendimento_emergencial),
-            "impedimento": float(impedimento),
+        "informal_deviations": {
+            "meeting": float(meeting),
+            "emergency_service": float(emergency_service),
+            "impediment": float(impediment),
             "code_review": float(code_review),
-            "analise_tecnica": float(analise_tecnica)
+            "assistant": float(assistant)
         }
     }
 
-    return resultado
+    return result

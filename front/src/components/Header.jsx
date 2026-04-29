@@ -2,17 +2,17 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import logo from "../assets/logo.png";
 
-export default function Header({ filtros, setFiltros }) {
-  const [opcoesFiltros, setOpcoesFiltros] = useState({
-    teams: ["Todos"],
-    sprints: ["Todos"],
-    devs: ["Todos"],
+export default function Header({ filters, setFilters }) {
+  const [filterOptions, setFilterOptions] = useState({
+    teams: ["All"],
+    sprints: ["All"],
+    devs: ["All"],
   });
 
   useEffect(() => {
-    axios.get("http://localhost:9001/filtros")
+    axios.get("http://localhost:9001/filters")
       .then((res) => {
-        setOpcoesFiltros({
+        setFilterOptions({
           teams: ["Todos", ...res.data.teams],
           sprints: ["Todos", ...res.data.sprints],
           devs: ["Todos", ...res.data.devs],
@@ -21,10 +21,10 @@ export default function Header({ filtros, setFiltros }) {
       .catch((err) => console.error("Erro ao carregar filtros:", err));
   }, []);
 
-  const handleChange = (campo, valor) => {
-    setFiltros((prev) => ({
+  const handleChange = (field, value) => {
+    setFilters((prev) => ({
       ...prev,
-      [campo]: valor,
+      [field]: value,
     }));
   };
 
@@ -64,23 +64,23 @@ export default function Header({ filtros, setFiltros }) {
       >
         <Select
           label="Team"
-          value={filtros.team}
+          value={filters.team}
           onChange={(v) => handleChange("team", v)}
-          options={opcoesFiltros.teams}
+          options={filterOptions.teams}
         />
 
         <Select
           label="Sprint"
-          value={filtros.sprint}
+          value={filters.sprint}
           onChange={(v) => handleChange("sprint", v)}
-          options={opcoesFiltros.sprints}
+          options={filterOptions.sprints}
         />
 
         <Select
           label="Desenvolvedor"
-          value={filtros.dev}
+          value={filters.dev}
           onChange={(v) => handleChange("dev", v)}
-          options={opcoesFiltros.devs}
+          options={filterOptions.devs}
         />
       </div>
     </div>
