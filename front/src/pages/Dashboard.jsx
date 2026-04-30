@@ -11,9 +11,9 @@ export default function Dashboard() {
   const [data, setData] = useState(null);
 
   const [filters, setFilters] = useState({
-    team: "All",
-    sprint: "All",
-    dev: "All",
+    team: "Todos",
+    sprint: "Todos",
+    dev: "Todos",
   });
 
   // =========================
